@@ -1,8 +1,41 @@
-- name: SonarQube Scan
-  run: |
-    pytest --cov=. --cov-report=xml
-    sonar-scanner \
-      -Dsonar.projectKey=voter-system \
-      -Dsonar.sources=. \
-      -Dsonar.host.url=http://localhost:9000 \
-      -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+name: SonarQube Scan
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  sonar:
+    name: Run SonarQube analysis
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install SonarScanner
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+          wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
+
+      - name: Run SonarQube scanner
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          ./sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner \
+            -Dsonar.projectKey=voter-system \
+            -Dsonar.sources=. \
+            -Dsonar.host.url="${SONAR_HOST_URL}" \
+            -Dsonar.login="${SONAR_TOKEN}"
