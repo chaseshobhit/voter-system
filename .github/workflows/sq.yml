@@ -24,11 +24,13 @@ jobs:
 
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@v1
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          organization: "chaseshobhit"
-          token: ${{ secrets.SONAR_TOKEN }}
-          projectKey: "voter-system"
-          projectName: "Voter System"
-          extraProperties: |
-            sonar.sources=.
-            sonar.host.url=${{ secrets.SONAR_HOST_URL }}
+          args: >
+            -Dsonar.organization=chaseshobhit
+            -Dsonar.projectKey=voter-system
+            -Dsonar.projectName="Voter System"
+            -Dsonar.sources=.
+            -Dsonar.host.url=https://sonarcloud.io
+          projectBaseDir: .
