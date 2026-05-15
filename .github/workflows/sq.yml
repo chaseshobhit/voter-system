@@ -40,6 +40,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
         run: |
+          export PATH="$JAVA_HOME/bin:$PATH"
           ./sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner \
             -Dsonar.projectKey=voter-system \
             -Dsonar.sources=. \
