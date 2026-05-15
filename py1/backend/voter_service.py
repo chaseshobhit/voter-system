@@ -35,7 +35,10 @@ def register_voter(voter: Voter):
 
     phone_digits = re.sub(r"\D", "", voter.phone)
     if len(phone_digits) != 10:
-        raise HTTPException(status_code=400, detail="Provide valid phone number")
+        raise HTTPException(
+            status_code=400,
+            detail="Provide valid phone number",
+        )
 
     connection = get_db_connection()
     cursor = connection.cursor(cursor_factory=RealDictCursor)
@@ -43,18 +46,28 @@ def register_voter(voter: Voter):
     try:
         password_hash = hash_password(voter.password)
         cursor.execute(
-            """
-            INSERT INTO voters (name, email, age, phone, address, password_hash)
-            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id
-            """,
-            (voter.name, voter.email, voter.age, voter.phone, voter.address, password_hash),
+            (
+                "INSERT INTO voters (name, email, age, phone, address, "
+                "password_hash) VALUES (%s, %s, %s, %s, %s, %s) RETURNING id"
+            ),
+            (
+                voter.name,
+                voter.email,
+                voter.age,
+                voter.phone,
+                voter.address,
+                password_hash,
+            ),
         )
         voter_id = cursor.fetchone()["id"]
         connection.commit()
 
         cursor.close()
         connection.close()
-        return {"message": "Voter registered successfully!", "voter_id": voter_id}
+        return {
+            "message": "Voter registered successfully!",
+            "voter_id": voter_id,
+        }
 
     except psycopg2.IntegrityError:
         cursor.close()
@@ -63,18 +76,28 @@ def register_voter(voter: Voter):
 
 
 @app.get("/voters")
-def get_voters(search: str = None, page: int = 1, limit: int = 10, sort_by: str = "name"):
+def get_voters(
+    search: str = None,
+    page: int = 1,
+    limit: int = 10,
+    sort_by: str = "name",
+):
     connection = get_db_connection()
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
-    base_query = "SELECT id, name, email, age, phone, address, created_at FROM voters"
+    base_query = (
+        "SELECT id, name, email, age, phone, address, created_at "
+        "FROM voters"
+    )
     count_query = "SELECT COUNT(*) FROM voters"
 
     where_clause = ""
     params = []
 
     if search:
-        where_clause = " WHERE name ILIKE %s OR email ILIKE %s"
+        where_clause = (
+            " WHERE name ILIKE %s OR email ILIKE %s"
+        )
         search_param = f"%{search}%"
         params = [search_param, search_param]
 
@@ -89,7 +112,8 @@ def get_voters(search: str = None, page: int = 1, limit: int = 10, sort_by: str 
     base_query += " LIMIT %s OFFSET %s"
     params.extend([limit, offset])
 
-    cursor.execute(count_query, params[:-2] if search else [])
+    count_params = params[:-2] if search else []
+    cursor.execute(count_query, count_params)
     total_count = cursor.fetchone()["count"]
 
     cursor.execute(base_query, params)
@@ -113,7 +137,10 @@ def get_voter_by_id(voter_id: int):
     cursor = connection.cursor(cursor_factory=RealDictCursor)
 
     cursor.execute(
-        "SELECT id, name, email, age, phone, address, created_at FROM voters WHERE id = %s",
+        (
+            "SELECT id, name, email, age, phone, address, created_at "
+            "FROM voters WHERE id = %s"
+        ),
         (voter_id,),
     )
     voter = cursor.fetchone()
@@ -134,7 +161,10 @@ def update_voter(voter_id: int, voter: Voter):
 
     phone_digits = re.sub(r"\D", "", voter.phone)
     if len(phone_digits) != 10:
-        raise HTTPException(status_code=400, detail="Provide valid phone number")
+        raise HTTPException(
+            status_code=400,
+            detail="Provide valid phone number",
+        )
 
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -144,10 +174,19 @@ def update_voter(voter_id: int, voter: Voter):
         cursor.execute(
             """
             UPDATE voters
-            SET name = %s, email = %s, age = %s, phone = %s, address = %s, password_hash = %s
+            SET name = %s, email = %s, age = %s, phone = %s,
+                address = %s, password_hash = %s
             WHERE id = %s
             """,
-            (voter.name, voter.email, voter.age, voter.phone, voter.address, password_hash, voter_id),
+            (
+                voter.name,
+                voter.email,
+                voter.age,
+                voter.phone,
+                voter.address,
+                password_hash,
+                voter_id,
+            ),
         )
 
         if cursor.rowcount == 0:
