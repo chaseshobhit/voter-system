@@ -1,2 +1,6 @@
-def test_example():
-    assert 2 + 2 == 4
+import unittest
+
+
+class TestSample(unittest.TestCase):
+    def test_example(self):
+        self.assertEqual(2 + 2, 4)
